@@ -1,0 +1,46 @@
+{
+  "name": "dblet",
+  "version": "0.0.1",
+  "description": "Homemade web application toolkit for me.",
+  "author": "Joe-noh",
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "default": "./dist/index.mjs"
+    },
+    "./setup": {
+      "types": "./dist/setup.d.mts",
+      "default": "./dist/setup.mjs"
+    }
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsdown",
+    "format": "oxfmt",
+    "typecheck": "tsc --noEmit",
+    "test": "pnpm build && vitest"
+  },
+  "devDependencies": {
+    "@types/node": "^26.1.0",
+    "oxfmt": "^0.57.0",
+    "tsdown": "^0.22.3",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.9"
+  },
+  "peerDependencies": {
+    "vitest": ">=4"
+  },
+  "peerDependenciesMeta": {
+    "vitest": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "packageManager": "pnpm@11.9.0"
+}
