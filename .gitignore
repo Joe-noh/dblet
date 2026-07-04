@@ -2,7 +2,7 @@
 .pnpm-store
 .node_repl_history
 
-/node_modules
+node_modules
 /dist
 
 /.zed

@@ -1,3 +1,6 @@
+import { existsSync } from "node:fs";
+import { join } from "node:path";
+
 export type DbConnectionConfig = {
   host?: string;
   port?: number;
@@ -7,10 +10,16 @@ export type DbConnectionConfig = {
   ssl?: boolean | Record<string, unknown>;
 };
 
-export type DbConfig = {
-  client: "pg";
+export type DbEnvConfig = {
   connection: DbConnectionConfig;
   poolSize?: number;
+};
+
+export type DbConfig = {
+  client: "pg";
+  test?: DbEnvConfig;
+  development?: DbEnvConfig;
+  production?: DbEnvConfig;
 };
 
 export type MigrationsConfig = {
@@ -22,6 +31,20 @@ export type DbletConfig = {
   migrations?: MigrationsConfig;
 };
 
+const CONFIG_FILES = ["ts", "mts", "js", "mjs"].map((ext) => {
+  return `dblet.config.${ext}`;
+});
+
 export function defineConfig(config: DbletConfig) {
   return config;
+}
+
+export function findConfigFile(cwd = process.cwd()): string | undefined {
+  for (const name of CONFIG_FILES) {
+    const candidate = join(cwd, name);
+
+    if (existsSync(candidate)) {
+      return candidate;
+    }
+  }
 }

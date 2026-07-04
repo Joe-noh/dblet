@@ -1,1 +1,1 @@
-export default {};
+export { defineConfig } from "./config";
