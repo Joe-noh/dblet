@@ -1,0 +1,8 @@
+services:
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: dblet
+      POSTGRES_PASSWORD: dblet
+    ports:
+      - "54321:5432"

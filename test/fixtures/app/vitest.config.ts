@@ -2,7 +2,7 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    globalSetup: [],
-    setupFiles: [],
+    globalSetup: ["dblet/vitest-global"],
+    setupFiles: ["dblet/vitest"],
   },
 });

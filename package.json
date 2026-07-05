@@ -3,6 +3,9 @@
   "version": "0.0.1",
   "description": "Homemade web application toolkit for me.",
   "author": "Joe-noh",
+  "bin": {
+    "dblet": "./dist/cli.mjs"
+  },
   "files": [
     "dist"
   ],
@@ -12,9 +15,17 @@
       "types": "./dist/index.d.mts",
       "default": "./dist/index.mjs"
     },
-    "./setup": {
-      "types": "./dist/setup.d.mts",
-      "default": "./dist/setup.mjs"
+    "./kysely": {
+      "types": "./dist/kysely.d.mts",
+      "default": "./dist/kysely.mjs"
+    },
+    "./vitest": {
+      "types": "./dist/vitest.d.mts",
+      "default": "./dist/vitest.mjs"
+    },
+    "./vitest-global": {
+      "types": "./dist/vitest-global.d.mts",
+      "default": "./dist/vitest-global.mjs"
     }
   },
   "scripts": {
@@ -24,8 +35,14 @@
     "typecheck": "tsc --noEmit",
     "test": "pnpm build && vitest"
   },
+  "dependencies": {
+    "jiti": "^2.7.0",
+    "kysely": "^0.29.2",
+    "pg": "^8.22.0"
+  },
   "devDependencies": {
     "@types/node": "^26.1.0",
+    "@types/pg": "^8.20.0",
     "oxfmt": "^0.57.0",
     "tsdown": "^0.22.3",
     "typescript": "^6.0.3",
