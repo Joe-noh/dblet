@@ -1,5 +1,5 @@
 import { mkdir, writeFile } from "node:fs/promises";
-import { join, resolve } from "node:path";
+import { join, relative } from "node:path";
 import { createMigrator, generateTimestamp, migrationTemplate } from "@/migration";
 import { rawDbConn, getConfig, closeDbConn } from "@/runtime";
 
@@ -20,7 +20,7 @@ async function migrationNew(name: string | undefined) {
   const file = join(dir, `${generateTimestamp()}_${name}.ts`);
   await writeFile(file, migrationTemplate());
 
-  console.log(`Created ${resolve(process.cwd(), file)}.`);
+  console.log(`Created ${relative(process.cwd(), file)}.`);
 }
 
 async function migrationUp(): Promise<void> {
@@ -31,10 +31,10 @@ async function migrationUp(): Promise<void> {
 }
 
 function detectEnv() {
-  const env = process.env.DBLET_ENV
+  const env = process.env.DBLET_ENV;
 
   if (!env) {
-    process.env.DBLET_ENV = 'development'
+    process.env.DBLET_ENV = "development";
   }
 }
 

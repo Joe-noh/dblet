@@ -1,4 +1,6 @@
 import { execFile } from "node:child_process";
+import { mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
@@ -15,7 +17,36 @@ const CONNECTION = {
 
 const execFileAsync = promisify(execFile);
 const rootDir = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const fixtureDir = resolve(rootDir, "test/fixtures/app");
+const fixtureDir = join(rootDir, "test/fixtures/app");
+const cliPath = join(rootDir, "dist/cli.mjs");
+
+function runCli(args: string[], cwd = fixtureDir) {
+  return execFileAsync(process.execPath, [cliPath, ...args], { cwd });
+}
+
+describe("migration:new", () => {
+  test("creates timestamped file", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "dblet-cli-"));
+
+    writeFileSync(
+      join(dir, "dblet.config.ts"),
+      `export default { db: { development: { connection: { database: 'x' } } } }`,
+    );
+
+    const { stdout } = await runCli(["migration:new", "add_users_table"], dir);
+    expect(stdout).toMatch(/Created migrations\/\d{14}_add_users_table\.ts\./);
+
+    const files = readdirSync(join(dir, "migrations"));
+    const content = readFileSync(join(dir, "migrations", files[0]), "utf8");
+
+    expect(content).toContain("export async function up(db: Kysely<any>): Promise<void> {");
+    expect(content).toContain("export async function down(db: Kysely<any>): Promise<void> {");
+  });
+
+  test("rejects invalid name", async () => {
+    await expect(runCli(["migration:new", "../../evil"])).rejects.toMatchObject({ code: 1 });
+  });
+});
 
 describe("vitest setup", () => {
   test("runs tests inside transactions", async () => {
