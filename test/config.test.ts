@@ -45,7 +45,7 @@ describe("loadConfig", () => {
         port: 54321,
         user: "dblet",
         password: "dblet",
-        database: "dblet_e2e",
+        database: "dblet_e2e_test",
       },
       poolSize: undefined,
       migrations: {

@@ -5,7 +5,7 @@ import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { Client } from "pg";
-import { describe, expect, test } from "vitest";
+import { beforeEach, describe, expect, test } from "vitest";
 
 const CONNECTION = {
   host: "localhost",
@@ -48,6 +48,39 @@ describe("migration:new", () => {
   });
 });
 
+describe("migration round-trip", () => {
+  beforeEach(async () => {
+    await runCli(["db:reset"]);
+  });
+
+  test("can apply and revert", async () => {
+    let result = await runCli(["migration:status"]);
+    expect(result.stdout).toContain("[applied] 20260705000000_create_users");
+
+    result = await runCli(["migration:down"]);
+    expect(result.stdout).toContain("✓ reverted 20260705000000_create_users");
+
+    result = await runCli(["migration:status"]);
+    expect(result.stdout).toContain("[pending] 20260705000000_create_users");
+
+    result = await runCli(["migration:up"]);
+    expect(result.stdout).toContain("✓ applied 20260705000000_create_users");
+
+    result = await runCli(["migration:up"]);
+    expect(result.stdout).toContain("No pending migrations.");
+  });
+});
+
+describe("db:reset", () => {
+  test("recreates database", async () => {
+    const { stdout } = await runCli(["db:reset"]);
+
+    expect(stdout).toContain("Dropped database dblet_e2e_dev");
+    expect(stdout).toContain("Created database dblet_e2e_dev");
+    expect(stdout).toContain("✓ applied 20260705000000_create_users");
+  });
+});
+
 describe("vitest setup", () => {
   test("runs tests inside transactions", async () => {
     const admin = new Client({ ...CONNECTION, database: "postgres" });
@@ -69,7 +102,7 @@ describe("vitest setup", () => {
     expect(stdout + stderr).not.toContain("failed");
 
     // Confirm everything rolled back.
-    const client = new Client(CONNECTION);
+    const client = new Client({ ...CONNECTION, database: "dblet_e2e_test" });
     await client.connect();
 
     try {

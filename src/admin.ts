@@ -52,3 +52,14 @@ export async function createDatabase(config: ResolvedDbletConfig): Promise<boole
     await client.end();
   }
 }
+
+export async function dropDatabase(config: ResolvedDbletConfig): Promise<void> {
+  const name = config.connection.database;
+  const client = await maintenanceClient(config);
+
+  try {
+    await client.query(`DROP DATABASE IF EXISTS ${quoteIdent(name)} WITH (FORCE)`);
+  } finally {
+    await client.end();
+  }
+}
