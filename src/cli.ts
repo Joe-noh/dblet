@@ -3,7 +3,7 @@ import { join, relative } from "node:path";
 import { MigrationResult } from "kysely/migration";
 import { createDatabase, dropDatabase } from "@/admin";
 import { createMigrator, generateTimestamp, migrationTemplate } from "@/migration";
-import { rawDbConn, getConfig, closeDbConn } from "@/runtime";
+import { newConnection, getConfig, closeDbConn } from "@/runtime";
 
 async function migrationNew(name: string | undefined) {
   if (!name) {
@@ -26,7 +26,7 @@ async function migrationNew(name: string | undefined) {
 }
 
 async function migrationUp(): Promise<void> {
-  const migrator = createMigrator(await rawDbConn(), await getConfig());
+  const migrator = createMigrator(await newConnection(), await getConfig());
   const { results, error } = await migrator.migrateToLatest();
 
   reportResults({ results, error });
@@ -37,7 +37,7 @@ async function migrationUp(): Promise<void> {
 }
 
 async function migrationDown(): Promise<void> {
-  const migrator = createMigrator(await rawDbConn(), await getConfig());
+  const migrator = createMigrator(await newConnection(), await getConfig());
   const { results, error } = await migrator.migrateDown();
   console.error(results, error);
 
@@ -51,7 +51,7 @@ async function migrationDown(): Promise<void> {
 }
 
 async function migrationStatus(): Promise<void> {
-  const migrator = createMigrator(await rawDbConn(), await getConfig());
+  const migrator = createMigrator(await newConnection(), await getConfig());
   const migrations = await migrator.getMigrations();
 
   if (migrations.length === 0) {

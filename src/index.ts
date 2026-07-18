@@ -1,2 +1,2 @@
 export { defineConfig } from "@/config";
-export { dbConn } from "@/runtime";
+export { connection } from "@/runtime";

@@ -1,11 +1,11 @@
 import type { ControlledTransaction } from "kysely";
 import { afterAll, afterEach, beforeEach } from "vitest";
-import { clearTestConnection, closeDbConn, rawDbConn, setTestConnection } from "@/runtime";
+import { clearTestConnection, closeDbConn, newConnection, setTestConnection } from "@/runtime";
 
 let tx: ControlledTransaction<any> | undefined;
 
 beforeEach(async () => {
-  const db = await rawDbConn();
+  const db = await newConnection();
   tx = await db.startTransaction().execute();
 
   setTestConnection(tx);

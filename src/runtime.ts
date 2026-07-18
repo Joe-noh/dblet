@@ -42,7 +42,7 @@ export async function getConfig(): Promise<ResolvedDbletConfig> {
   return state.config;
 }
 
-export async function dbConn<DB = any>(): Promise<Kysely<DB>> {
+export async function connection<DB = any>(): Promise<Kysely<DB>> {
   if (state.testConn) {
     return state.testConn as Kysely<DB>;
   }
@@ -53,10 +53,8 @@ export async function dbConn<DB = any>(): Promise<Kysely<DB>> {
   return state.db as Kysely<DB>;
 }
 
-export async function rawDbConn<DB = any>(): Promise<Kysely<DB>> {
-  if (!state.db) {
-    state.db = createKysely(await getConfig());
-  }
+export async function newConnection<DB = any>(): Promise<Kysely<DB>> {
+  state.db = createKysely(await getConfig());
 
   return state.db as Kysely<DB>;
 }
