@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 jobs:
   publish:
@@ -26,5 +27,3 @@ jobs:
       - run: npm version ${{ inputs.version }} --no-git-tag-version
       - run: pnpm build
       - run: pnpm publish --no-git-checks
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
