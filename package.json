@@ -1,5 +1,5 @@
 {
-  "name": "@joe-noh/dblet",
+  "name": "dblet",
   "version": "0.0.1",
   "description": "Homemade web application toolkit for me.",
   "author": "Joe-noh",
@@ -27,9 +27,6 @@
       "types": "./dist/vitest-global.d.mts",
       "default": "./dist/vitest-global.mjs"
     }
-  },
-  "publishConfig": {
-    "registry": "https://npm.pkg.github.com"
   },
   "scripts": {
     "dev": "vite",
