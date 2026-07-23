@@ -1,2 +1,2 @@
 export { defineConfig } from "@/config";
-export { connection } from "@/runtime";
+export { connection, newConnection } from "@/runtime";
