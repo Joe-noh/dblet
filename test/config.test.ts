@@ -1,4 +1,4 @@
-import { mkdtempSync } from "node:fs";
+import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -7,14 +7,27 @@ import { findConfigFile, defineConfig, loadConfig } from "@/config";
 
 const fixtureDir = resolve(dirname(fileURLToPath(import.meta.url)), "fixtures/app");
 
+function writeStagingConfig(): string {
+  const dir = mkdtempSync(join(tmpdir(), "dblet-"));
+
+  writeFileSync(
+    join(dir, "dblet.config.mjs"),
+    `export default { db: { client: "pg", environments: { staging: { connection: { database: "staging_db" } } } } }`,
+  );
+
+  return dir;
+}
+
 describe("defineConfig", () => {
   test("returns given config as-is", () => {
     const config = {
       db: {
         client: "pg" as const,
-        test: {
-          connection: {
-            database: "postgres",
+        environments: {
+          test: {
+            connection: {
+              database: "postgres",
+            },
           },
         },
       },
@@ -60,5 +73,18 @@ describe("loadConfig", () => {
     const dir = mkdtempSync(join(tmpdir(), "dblet-"));
 
     await expect(loadConfig({ cwd: dir })).rejects.toThrow(/not found/);
+  });
+
+  test("loads an arbitrary environment", async () => {
+    const config = await loadConfig({ cwd: writeStagingConfig(), env: "staging" });
+
+    expect(config.connection.database).toBe("staging_db");
+  });
+
+  test("throws if the environment is not defined", async () => {
+    const dir = writeStagingConfig();
+
+    await expect(loadConfig({ cwd: dir, env: "production" })).rejects.toThrow(/not defined/);
+    await expect(loadConfig({ cwd: dir, env: "constructor" })).rejects.toThrow(/not defined/);
   });
 });

@@ -30,7 +30,7 @@ describe("migration:new", () => {
 
     writeFileSync(
       join(dir, "dblet.config.ts"),
-      `export default { db: { development: { connection: { database: 'x' } } } }`,
+      `export default { db: { environments: { development: { connection: { database: 'x' } } } } }`,
     );
 
     const { stdout } = await runCli(["migration:new", "add_users_table"], dir);

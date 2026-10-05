@@ -16,13 +16,9 @@ export type DbEnvConfig = {
   poolSize?: number;
 };
 
-type DbletEnv = "test" | "development" | "production";
-
 export type DbConfig = {
   client: "pg";
-  test?: DbEnvConfig;
-  development?: DbEnvConfig;
-  production?: DbEnvConfig;
+  environments: Record<string, DbEnvConfig>;
 };
 
 export type MigrationsConfig = {
@@ -64,7 +60,7 @@ export async function loadConfig({
   env,
 }: {
   cwd?: string;
-  env?: DbletEnv;
+  env?: string;
 } = {}): Promise<ResolvedDbletConfig> {
   const workingDir = cwd || process.cwd();
   const dbletEnv = env || process.env.DBLET_ENV;
@@ -79,11 +75,22 @@ export async function loadConfig({
   const baseDir = dirname(configPath);
   const migrationDir = config.migrations?.directory ?? "migrations";
 
-  if (["test", "development", "production"].every((e) => e !== dbletEnv)) {
-    throw new Error("DBLET_ENV is undefined. Set one of 'test', 'development' or 'production'.");
+  const environments = config.db.environments;
+  const available = Object.keys(environments)
+    .map((e) => `'${e}'`)
+    .join(", ");
+
+  if (!dbletEnv) {
+    throw new Error(`DBLET_ENV is undefined. Set one of ${available}.`);
   }
 
-  const { connection, poolSize } = config.db[dbletEnv as DbletEnv]!;
+  if (!Object.hasOwn(environments, dbletEnv)) {
+    throw new Error(
+      `Environment '${dbletEnv}' is not defined in db.environments. Set one of ${available}.`,
+    );
+  }
+
+  const { connection, poolSize } = environments[dbletEnv];
 
   return {
     client: config.db.client,
