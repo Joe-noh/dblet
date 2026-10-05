@@ -1,5 +1,6 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { join, relative } from "node:path";
+import { parseArgs } from "node:util";
 import { MigrationResult } from "kysely/migration";
 import { createDatabase, dropDatabase } from "@/admin";
 import { createMigrator, generateTimestamp, migrationTemplate } from "@/migration";
@@ -94,10 +95,10 @@ async function dbReset(): Promise<void> {
   await migrationUp();
 }
 
-function detectEnv() {
-  const env = process.env.DBLET_ENV;
-
-  if (!env) {
+function detectEnv(env: string | undefined) {
+  if (env) {
+    process.env.DBLET_ENV = env;
+  } else if (!process.env.DBLET_ENV) {
     process.env.DBLET_ENV = "development";
   }
 }
@@ -120,11 +121,15 @@ async function reportResults({ results, error }: { results?: MigrationResult[]; 
 }
 
 async function main(): Promise<void> {
-  const [command, ...args] = process.argv.slice(2);
-
-  detectEnv();
-
   try {
+    const { values, positionals } = parseArgs({
+      options: { env: { type: "string" } },
+      allowPositionals: true,
+    });
+    const [command, ...args] = positionals;
+
+    detectEnv(values.env);
+
     switch (command) {
       case "migration:new":
         await migrationNew(args[0]);

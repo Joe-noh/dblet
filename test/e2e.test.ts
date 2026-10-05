@@ -48,6 +48,31 @@ describe("migration:new", () => {
   });
 });
 
+describe("--env option", () => {
+  test("selects the environment", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "dblet-cli-"));
+
+    writeFileSync(
+      join(dir, "dblet.config.ts"),
+      `export default { db: { environments: { staging: { connection: { database: 'x' } } } } }`,
+    );
+
+    await expect(runCli(["migration:new", "add_users_table"], dir)).rejects.toMatchObject({
+      code: 1,
+    });
+
+    const { stdout } = await runCli(["migration:new", "add_users_table", "--env", "staging"], dir);
+    expect(stdout).toMatch(/Created migrations\/\d{14}_add_users_table\.ts\./);
+  });
+
+  test("rejects an undefined environment", async () => {
+    await expect(runCli(["migration:status", "--env=staging"])).rejects.toMatchObject({
+      code: 1,
+      stderr: expect.stringContaining("Environment 'staging' is not defined"),
+    });
+  });
+});
+
 describe("migration round-trip", () => {
   beforeEach(async () => {
     await runCli(["db:reset"]);
