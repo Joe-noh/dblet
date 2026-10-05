@@ -3,7 +3,8 @@ import { tmpdir } from "node:os";
 import { join, resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, test } from "vitest";
-import { findConfigFile, defineConfig, loadConfig } from "@/config";
+import { defineConfig, resolveEnvironment } from "@/config";
+import { findConfigFile, loadConfig } from "@/config-loader";
 
 const fixtureDir = resolve(dirname(fileURLToPath(import.meta.url)), "fixtures/app");
 
@@ -34,6 +35,34 @@ describe("defineConfig", () => {
     };
 
     expect(defineConfig(config)).toBe(config);
+  });
+});
+
+describe("resolveEnvironment", () => {
+  const config = defineConfig({
+    db: {
+      client: "pg",
+      environments: {
+        staging: { connection: { database: "staging_db" }, poolSize: 3 },
+      },
+    },
+  });
+
+  test("returns the given environment", () => {
+    expect(resolveEnvironment(config, "staging")).toStrictEqual({
+      client: "pg",
+      connection: { database: "staging_db" },
+      poolSize: 3,
+    });
+  });
+
+  test("throws if the environment is not defined", () => {
+    expect(() => resolveEnvironment(config, "production")).toThrow(/not defined/);
+    expect(() => resolveEnvironment(config, "constructor")).toThrow(/not defined/);
+  });
+
+  test("throws if no environment is given", () => {
+    expect(() => resolveEnvironment(config, undefined)).toThrow(/DBLET_ENV is undefined/);
   });
 });
 

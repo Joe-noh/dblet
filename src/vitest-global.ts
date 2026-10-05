@@ -1,5 +1,5 @@
 import { createDatabase } from "@/admin";
-import { loadConfig } from "@/config";
+import { loadConfig } from "@/config-loader";
 import { createKysely } from "@/runtime";
 import { createMigrator } from "./migration";
 
