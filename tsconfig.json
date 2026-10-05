@@ -12,7 +12,9 @@
     "isolatedModules": true,
     "types": ["node"],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "dblet": ["./src/index.ts"],
+      "dblet/*": ["./src/*.ts"]
     }
   },
   "include": ["src", "test", "tsdown.config.ts"]
