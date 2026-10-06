@@ -3,6 +3,10 @@
   "version": "0.0.1",
   "description": "Homemade web application toolkit for me.",
   "author": "Joe-noh",
+  "license": "MIT",
+  "repository": {
+    "url": "https://github.com/Joe-noh/dblet"
+  },
   "bin": {
     "dblet": "./dist/cli.mjs"
   },
