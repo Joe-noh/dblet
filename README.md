@@ -46,6 +46,7 @@ export default defineConfig({
     },
   },
   migrations: { directory: "migrations" }, // optional
+  codegen: { outFile: "dblet.d.ts" }, // optional, or false to disable
 });
 ```
 
@@ -62,6 +63,7 @@ npx dblet migration:status
 npx dblet db:create
 npx dblet db:drop
 npx dblet db:reset
+npx dblet db:codegen
 
 # Environment: --env > DBLET_ENV > "development"
 npx dblet migration:up --env=production
@@ -96,12 +98,27 @@ export async function down(db: Kysely<any>): Promise<void> {
 ```ts
 import { connection } from "dblet";
 
+// Typed as Kysely<DB> by the generated dblet.d.ts
 const db = await connection();
 const users = await db.selectFrom("users").selectAll().execute();
 ```
 
 ```sh
 DBLET_ENV=production node server.js
+```
+
+## Types
+
+```sh
+# dblet.d.ts is regenerated when migration:up / migration:down change the schema
+npx dblet migration:up
+```
+
+```jsonc
+// tsconfig.json: make sure dblet.d.ts is included
+{
+  "include": ["src", "dblet.d.ts"],
+}
 ```
 
 ## Vitest

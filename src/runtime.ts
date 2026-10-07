@@ -1,7 +1,7 @@
 import { Kysely } from "kysely";
 import { ResolvedDbletConfig } from "@/config";
 import { loadConfig } from "@/config-loader";
-import { createKysely, scopedConnection, state } from "@/connection";
+import { createKysely, scopedConnection, state, type RegisteredDB } from "@/connection";
 
 export { createKysely, setTestConnection, clearTestConnection } from "@/connection";
 
@@ -17,7 +17,7 @@ export async function getConfig(): Promise<ResolvedDbletConfig> {
   return state.config;
 }
 
-export async function connection<DB = any>(): Promise<Kysely<DB>> {
+export async function connection<DB = RegisteredDB>(): Promise<Kysely<DB>> {
   const scoped = scopedConnection<DB>();
 
   if (scoped) {
@@ -30,7 +30,7 @@ export async function connection<DB = any>(): Promise<Kysely<DB>> {
   return state.db as Kysely<DB>;
 }
 
-export async function newConnection<DB = any>(): Promise<Kysely<DB>> {
+export async function newConnection<DB = RegisteredDB>(): Promise<Kysely<DB>> {
   state.db = createKysely(await getConfig());
 
   return state.db as Kysely<DB>;

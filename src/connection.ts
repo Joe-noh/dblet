@@ -3,6 +3,11 @@ import { Kysely, PostgresDialect } from "kysely";
 import { Pool } from "pg";
 import type { DbEnvConfig, ResolvedDbletConfig } from "@/config";
 
+// Augmented by the generated dblet.d.ts so that connection() returns Kysely<DB>.
+export interface Register {}
+
+export type RegisteredDB = Register extends { db: infer DB } ? DB : any;
+
 type DbletState = {
   config: ResolvedDbletConfig | undefined;
   db: Kysely<any> | undefined;

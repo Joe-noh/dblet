@@ -21,9 +21,14 @@ export type MigrationsConfig = {
   directory: string;
 };
 
+export type CodegenConfig = {
+  outFile?: string;
+};
+
 export type DbletConfig = {
   db: DbConfig;
   migrations?: MigrationsConfig;
+  codegen?: CodegenConfig | false;
 };
 
 export type ResolvedEnvironment = DbEnvConfig & {
@@ -32,6 +37,7 @@ export type ResolvedEnvironment = DbEnvConfig & {
 
 export type ResolvedDbletConfig = ResolvedEnvironment & {
   migrations: MigrationsConfig;
+  codegen: Required<CodegenConfig> | false;
 };
 
 export function defineConfig(config: DbletConfig): DbletConfig {

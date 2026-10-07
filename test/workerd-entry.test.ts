@@ -46,5 +46,7 @@ test("workerd condition points to the workerd entry", () => {
 test("workerd entry does not import node-only modules", () => {
   const specifiers = [...collectImports(join(rootDir, "dist/index.workerd.mjs"))];
 
-  expect(specifiers.filter((s) => /^(jiti|node:fs|node:path)/.test(s))).toEqual([]);
+  expect(
+    specifiers.filter((s) => /^(jiti|node:fs|node:path|kysely-codegen|typescript)/.test(s)),
+  ).toEqual([]);
 });

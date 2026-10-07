@@ -1,5 +1,5 @@
 import { execFile } from "node:child_process";
-import { mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -102,6 +102,45 @@ describe("--url option", () => {
     expect(stdout).toContain("✓ applied 20260705000000_create_users");
 
     expect((await run("db:drop")).stdout).toContain("Dropped database dblet_e2e_url");
+  });
+});
+
+describe("type generation", () => {
+  test("regenerates types when migrations change the schema", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "dblet-codegen-"));
+    const outFile = join(dir, "dblet.d.ts");
+    const connection = { ...CONNECTION, database: "dblet_e2e_codegen" };
+
+    writeFileSync(
+      join(dir, "dblet.config.mjs"),
+      `export default ${JSON.stringify({ db: { client: "pg", environments: { development: { connection } } } })}`,
+    );
+    mkdirSync(join(dir, "migrations"));
+    writeFileSync(
+      join(dir, "migrations/20260101000000_create_posts.mjs"),
+      [
+        "export async function up(db) {",
+        '  await db.schema.createTable("posts").addColumn("id", "serial").execute();',
+        "}",
+        "export async function down(db) {",
+        '  await db.schema.dropTable("posts").execute();',
+        "}",
+      ].join("\n"),
+    );
+
+    try {
+      expect((await runCli(["db:reset"], dir)).stdout).toContain("Generated dblet.d.ts.");
+      expect(readFileSync(outFile, "utf8")).toContain("posts: Posts;");
+      expect(readFileSync(outFile, "utf8")).toContain('declare module "dblet"');
+
+      // Unchanged schema: nothing is written.
+      expect((await runCli(["db:codegen"], dir)).stdout).not.toContain("Generated");
+
+      expect((await runCli(["migration:down"], dir)).stdout).toContain("Generated dblet.d.ts.");
+      expect(readFileSync(outFile, "utf8")).not.toContain("posts");
+    } finally {
+      await runCli(["db:drop"], dir);
+    }
   });
 });
 

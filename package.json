@@ -44,6 +44,7 @@
   "dependencies": {
     "jiti": "^2.7.0",
     "kysely": "^0.29.6",
+    "kysely-codegen": "^0.20.0",
     "pg": "^8.23.1",
     "pg-connection-string": "^2.14.1"
   },

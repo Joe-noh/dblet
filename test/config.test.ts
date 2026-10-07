@@ -8,13 +8,15 @@ import { findConfigFile, loadConfig, parseDatabaseUrl } from "@/config-loader";
 
 const fixtureDir = resolve(dirname(fileURLToPath(import.meta.url)), "fixtures/app");
 
-function writeStagingConfig(): string {
+function writeStagingConfig(extra: Record<string, unknown> = {}): string {
   const dir = mkdtempSync(join(tmpdir(), "dblet-"));
+  const config = {
+    db: { client: "pg", environments: { staging: { connection: { database: "staging_db" } } } },
+    migrations: { directory: "db/migrations" },
+    ...extra,
+  };
 
-  writeFileSync(
-    join(dir, "dblet.config.mjs"),
-    `export default { db: { client: "pg", environments: { staging: { connection: { database: "staging_db" } } } }, migrations: { directory: "db/migrations" } }`,
-  );
+  writeFileSync(join(dir, "dblet.config.mjs"), `export default ${JSON.stringify(config)}`);
 
   return dir;
 }
@@ -116,9 +118,28 @@ describe("loadConfig", () => {
       migrations: {
         directory: join(fixtureDir, "migrations"),
       },
+      codegen: {
+        outFile: join(fixtureDir, "dblet.d.ts"),
+      },
     };
 
     expect(await loadConfig({ cwd: fixtureDir, env: "test" })).toStrictEqual(config);
+  });
+
+  test("resolves the codegen output file", async () => {
+    const dir = writeStagingConfig({ codegen: { outFile: "src/db.d.ts" } });
+    const config = await loadConfig({ cwd: dir, env: "staging" });
+
+    expect(config.codegen).toEqual({ outFile: join(dir, "src/db.d.ts") });
+  });
+
+  test("disables codegen", async () => {
+    const config = await loadConfig({
+      cwd: writeStagingConfig({ codegen: false }),
+      env: "staging",
+    });
+
+    expect(config.codegen).toBe(false);
   });
 
   test("throws if no config file found", async () => {

@@ -3,9 +3,10 @@ import { join, relative } from "node:path";
 import { parseArgs } from "node:util";
 import { MigrationResult } from "kysely/migration";
 import { createDatabase, dropDatabase } from "@/admin";
+import { generateTypes } from "@/codegen";
 import { loadConfig } from "@/config-loader";
 import { createMigrator, generateTimestamp, migrationTemplate } from "@/migration";
-import { newConnection, getConfig, closeDbConn, setConfig } from "@/runtime";
+import { connection, newConnection, getConfig, closeDbConn, setConfig } from "@/runtime";
 
 async function migrationNew(name: string | undefined) {
   if (!name) {
@@ -31,25 +32,26 @@ async function migrationUp(): Promise<void> {
   const migrator = createMigrator(await newConnection(), await getConfig());
   const { results, error } = await migrator.migrateToLatest();
 
-  reportResults({ results, error });
+  await reportResults({ results, error });
 
   if (results?.length === 0) {
     console.log("No pending migrations.");
   }
+
+  await generateTypesAfter(results);
 }
 
 async function migrationDown(): Promise<void> {
   const migrator = createMigrator(await newConnection(), await getConfig());
   const { results, error } = await migrator.migrateDown();
-  console.error(results, error);
 
-  reportResults({ results, error });
-
-  console.error(results);
+  await reportResults({ results, error });
 
   if (results?.length === 1 && !results[0].migrationName) {
     console.log("No migrations to rollback.");
   }
+
+  await generateTypesAfter(results);
 }
 
 async function migrationStatus(): Promise<void> {
@@ -96,6 +98,34 @@ async function dbReset(): Promise<void> {
   await migrationUp();
 }
 
+async function dbCodegen(): Promise<void> {
+  const { codegen } = await getConfig();
+
+  if (!codegen) {
+    throw new Error("Type generation is disabled by `codegen: false` in dblet config.");
+  }
+
+  if (await generateTypes(await connection(), codegen.outFile)) {
+    console.log(`Generated ${relative(process.cwd(), codegen.outFile)}.`);
+  }
+}
+
+// The migrations already succeeded, so a failure here only warns.
+async function generateTypesAfter(results: MigrationResult[] | undefined): Promise<void> {
+  const { codegen } = await getConfig();
+
+  if (!codegen || !results?.some(({ status }) => status === "Success")) {
+    return;
+  }
+
+  try {
+    await dbCodegen();
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(`Skipped type generation: ${message.split("\n")[0]}`);
+  }
+}
+
 function detectEnv(env: string | undefined) {
   if (env) {
     process.env.DBLET_ENV = env;
@@ -139,6 +169,7 @@ const COMMANDS: Record<string, Command> = {
   "db:create": { description: "Create the database", run: dbCreate },
   "db:drop": { description: "Drop the database", run: dbDrop },
   "db:reset": { description: "Drop, create and migrate the database", run: dbReset },
+  "db:codegen": { description: "Generate types from the database schema", run: dbCodegen },
 };
 
 const OPTIONS = [

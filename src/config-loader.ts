@@ -77,11 +77,14 @@ export async function loadConfig({
 
   const baseDir = configPath ? dirname(configPath) : workingDir;
   const migrationDir = config?.migrations?.directory ?? "migrations";
+  const codegen = config?.codegen ?? {};
 
   return {
     ...environment,
     migrations: {
       directory: resolve(baseDir, migrationDir),
     },
+    codegen:
+      codegen === false ? false : { outFile: resolve(baseDir, codegen.outFile ?? "dblet.d.ts") },
   };
 }
