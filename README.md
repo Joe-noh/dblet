@@ -52,6 +52,8 @@ export default defineConfig({
 ## CLI
 
 ```sh
+npx dblet --help
+
 npx dblet migration:new create_users
 npx dblet migration:up
 npx dblet migration:down

@@ -121,40 +121,76 @@ async function reportResults({ results, error }: { results?: MigrationResult[]; 
   }
 }
 
+type Command = {
+  usage?: string;
+  description: string;
+  run: (args: string[]) => Promise<void>;
+};
+
+const COMMANDS: Record<string, Command> = {
+  "migration:new": {
+    usage: "<name>",
+    description: "Create a new migration file",
+    run: ([name]) => migrationNew(name),
+  },
+  "migration:up": { description: "Apply all pending migrations", run: migrationUp },
+  "migration:down": { description: "Revert the latest migration", run: migrationDown },
+  "migration:status": { description: "Show applied and pending migrations", run: migrationStatus },
+  "db:create": { description: "Create the database", run: dbCreate },
+  "db:drop": { description: "Drop the database", run: dbDrop },
+  "db:reset": { description: "Drop, create and migrate the database", run: dbReset },
+};
+
+const OPTIONS = [
+  ["--env <name>", "Environment in dblet.config (default: $DBLET_ENV or development)"],
+  ["--url <url>", "Database URL to use instead of the config environments"],
+  ["-h, --help", "Show this help"],
+];
+
+function help(): string {
+  const commands = Object.entries(COMMANDS).map(([name, { usage, description }]) => [
+    usage ? `${name} ${usage}` : name,
+    description,
+  ]);
+  const rows = (entries: string[][]) =>
+    entries.map(([left, right]) => `  ${left.padEnd(24)}${right}`);
+
+  return [
+    "Usage: dblet <command> [options]",
+    "",
+    "Commands:",
+    ...rows(commands),
+    "",
+    "Options:",
+    ...rows(OPTIONS),
+  ].join("\n");
+}
+
 async function main(): Promise<void> {
   try {
     const { values, positionals } = parseArgs({
-      options: { env: { type: "string" }, url: { type: "string" } },
+      options: {
+        env: { type: "string" },
+        url: { type: "string" },
+        help: { type: "boolean", short: "h" },
+      },
       allowPositionals: true,
     });
     const [command, ...args] = positionals;
 
+    if (!command || values.help) {
+      console.log(help());
+      return;
+    }
+
+    if (!Object.hasOwn(COMMANDS, command)) {
+      throw new Error(`Unknown command '${command}'. Run 'dblet --help' for usage.`);
+    }
+
     detectEnv(values.env);
     setConfig(await loadConfig({ env: values.env, url: values.url }));
 
-    switch (command) {
-      case "migration:new":
-        await migrationNew(args[0]);
-        break;
-      case "migration:up":
-        await migrationUp();
-        break;
-      case "migration:down":
-        await migrationDown();
-        break;
-      case "migration:status":
-        await migrationStatus();
-        break;
-      case "db:create":
-        await dbCreate();
-        break;
-      case "db:drop":
-        await dbDrop();
-        break;
-      case "db:reset":
-        await dbReset();
-        break;
-    }
+    await COMMANDS[command].run(args);
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));
     process.exitCode = 1;

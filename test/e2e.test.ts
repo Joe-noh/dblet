@@ -24,6 +24,23 @@ function runCli(args: string[], cwd = fixtureDir) {
   return execFileAsync(process.execPath, [cliPath, ...args], { cwd });
 }
 
+describe("help", () => {
+  test("prints usage without arguments or with --help", async () => {
+    // No dblet.config in `dir`: help must not need one.
+    const dir = mkdtempSync(join(tmpdir(), "dblet-cli-"));
+
+    expect((await runCli([], dir)).stdout).toContain("Usage: dblet <command> [options]");
+    expect((await runCli(["--help"], dir)).stdout).toContain("Usage: dblet <command> [options]");
+  });
+
+  test("rejects an unknown command", async () => {
+    await expect(runCli(["migrate"])).rejects.toMatchObject({
+      code: 1,
+      stderr: expect.stringContaining("Unknown command 'migrate'"),
+    });
+  });
+});
+
 describe("migration:new", () => {
   test("creates timestamped file", async () => {
     const dir = mkdtempSync(join(tmpdir(), "dblet-cli-"));
