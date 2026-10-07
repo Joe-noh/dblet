@@ -3,8 +3,9 @@ import { join, relative } from "node:path";
 import { parseArgs } from "node:util";
 import { MigrationResult } from "kysely/migration";
 import { createDatabase, dropDatabase } from "@/admin";
+import { loadConfig } from "@/config-loader";
 import { createMigrator, generateTimestamp, migrationTemplate } from "@/migration";
-import { newConnection, getConfig, closeDbConn } from "@/runtime";
+import { newConnection, getConfig, closeDbConn, setConfig } from "@/runtime";
 
 async function migrationNew(name: string | undefined) {
   if (!name) {
@@ -123,12 +124,13 @@ async function reportResults({ results, error }: { results?: MigrationResult[]; 
 async function main(): Promise<void> {
   try {
     const { values, positionals } = parseArgs({
-      options: { env: { type: "string" } },
+      options: { env: { type: "string" }, url: { type: "string" } },
       allowPositionals: true,
     });
     const [command, ...args] = positionals;
 
     detectEnv(values.env);
+    setConfig(await loadConfig({ env: values.env, url: values.url }));
 
     switch (command) {
       case "migration:new":

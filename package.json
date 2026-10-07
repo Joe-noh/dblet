@@ -2,8 +2,8 @@
   "name": "dblet",
   "version": "0.0.1",
   "description": "Homemade web application toolkit for me.",
-  "author": "Joe-noh",
   "license": "MIT",
+  "author": "Joe-noh",
   "repository": {
     "url": "https://github.com/Joe-noh/dblet"
   },
@@ -44,7 +44,8 @@
   "dependencies": {
     "jiti": "^2.7.0",
     "kysely": "^0.29.2",
-    "pg": "^8.22.0"
+    "pg": "^8.22.0",
+    "pg-connection-string": "^2.14.0"
   },
   "devDependencies": {
     "@types/node": "^26.1.0",

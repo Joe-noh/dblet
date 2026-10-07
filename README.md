@@ -64,6 +64,9 @@ npx dblet db:reset
 # Environment: --env > DBLET_ENV > "development"
 npx dblet migration:up --env=production
 DBLET_ENV=production npx dblet migration:up
+
+# Use a database URL instead of the config environments
+npx dblet migration:up --url=postgres://user:pass@localhost:5432/myapp
 ```
 
 ## Migration

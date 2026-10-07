@@ -5,6 +5,10 @@ import { createKysely, scopedConnection, state } from "@/connection";
 
 export { createKysely, setTestConnection, clearTestConnection } from "@/connection";
 
+export function setConfig(config: ResolvedDbletConfig): void {
+  state.config = config;
+}
+
 export async function getConfig(): Promise<ResolvedDbletConfig> {
   if (!state.config) {
     state.config = await loadConfig();

@@ -73,6 +73,21 @@ describe("--env option", () => {
   });
 });
 
+describe("--url option", () => {
+  test("runs commands against the given database", async () => {
+    const { host, port, user, password } = CONNECTION;
+    const url = `postgres://${user}:${password}@${host}:${port}/dblet_e2e_url`;
+    // `staging` is not defined in the fixture config, but --url makes the environment irrelevant.
+    const run = (command: string) => runCli([command, "--env=staging", `--url=${url}`]);
+
+    const { stdout } = await run("db:reset");
+    expect(stdout).toContain("Created database dblet_e2e_url");
+    expect(stdout).toContain("✓ applied 20260705000000_create_users");
+
+    expect((await run("db:drop")).stdout).toContain("Dropped database dblet_e2e_url");
+  });
+});
+
 describe("migration round-trip", () => {
   beforeEach(async () => {
     await runCli(["db:reset"]);
